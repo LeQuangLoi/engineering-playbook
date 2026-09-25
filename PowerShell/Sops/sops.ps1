@@ -7,10 +7,10 @@ param(
 
     [switch]$RunInPipeline,
 
-    # NEW: input file
+    [string]$AzureKeyVaultKey = $env:SOPS_AZURE_KEY,
+
     [string]$InputFile,
 
-    # NEW: output file
     [string]$OutputFile
 )
 
@@ -20,10 +20,12 @@ $ErrorActionPreference = 'Stop'
 if ($RunInPipeline) {
     $SopsExe = 'C:\tools\sops.exe'
 } else {
-    $SopsExe = & "$PSScriptRoot\install-sops.ps1"
+    $SopsExe = & "$PSScriptRoot\InstallSops.ps1"
 }
 
-$AzureKvKey = 'https://mykeyvault.vault.azure.net/keys/sops'
+if ([string]::IsNullOrWhiteSpace($AzureKeyVaultKey)) {
+    throw 'Provide -AzureKeyVaultKey or set SOPS_AZURE_KEY before running this script.'
+}
 
 # =========================
 # MODE 1: Custom file input
@@ -48,7 +50,7 @@ if ($InputFile) {
     Write-Host "  Output: $OutputFile"
 
     if ($Action -eq 'encrypt') {
-        & $SopsExe encrypt --azure-kv $AzureKvKey $InputFile |
+        & $SopsExe encrypt --azure-kv $AzureKeyVaultKey $InputFile |
             Set-Content $OutputFile -Encoding UTF8
     }
     else {
@@ -82,7 +84,7 @@ foreach ($name in $Files) {
             }
 
             Write-Host "Encrypting: $plain"
-            & $SopsExe encrypt --azure-kv $AzureKvKey $plain |
+            & $SopsExe encrypt --azure-kv $AzureKeyVaultKey $plain |
                 Set-Content $enc -Encoding utf8NoBOM
         }
 

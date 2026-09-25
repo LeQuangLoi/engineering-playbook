@@ -1,0 +1,12 @@
+# Office temporary files
+~$*
+~*.tmp
+*.tmp
+*.docx~
+
+# Secret and decrypted output files
+*.enc.json
+keyvault/*.json
+
+# Local PowerShell output
+*.log
